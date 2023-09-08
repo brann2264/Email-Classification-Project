@@ -1,24 +1,11 @@
 import os.path
-
+import base64
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-import base64
 
-
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
-creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-service = build('gmail', 'v1', credentials=creds)
-
-
-def list_messages(service):
-
-    try:
-        return service.users().messages().list(userId="me", q="has:nouserlabels").execute()
-    except Exception as error:
-        print(f"{error}")
 
 def get_message(service, id):
 
@@ -34,16 +21,19 @@ def get_message(service, id):
     except Exception as error:
         print(f"Message not found: Error - {error}")
 
+def create_label(service, label_name, visibility="show"):
+    
+    label_body = {"name": label_name,
+                "messageListVisibility": visibility,
+                "labelListVisibility": "labelShow"}  
+    
+    label = service.users().labels().create(userId="me", body=label_body).execute
 
-def main():
+    return label
 
-    service = build("gmail", "v1", credentials=creds)
-    results = service.users().messages().list(userId="me", q="has:nouserlabels").execute()
-    messages = results.get("messages", [])
+def label_email(service, label, email_id):
 
-    for message in messages:
-        break
+    request_body = {"addLabelIds":[label]}
+    labeled_message = service.users().messages().modify(userId="me", id=email_id, body=request_body)
 
-    print(get_message(service=service, id=messages[0]["id"]))
-
-main()
+    return labeled_message
