@@ -9,11 +9,14 @@ from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from torchmetrics import Accuracy
 
+#Load dataset
 datadf = pd.read_csv("/kaggle/input/fraud-email-dataset/fraud_email_.csv")
+#Remove incompatible data point
 datadf = datadf.drop(5129)
 
 torch.manual_seed(5)
 
+#Prepares data into training and testing dataloaders
 train_df, test_df= train_test_split(datadf.sample(500), random_state=2)
 tokenizer = AutoTokenizer.from_pretrained("bert-base-cased")
 
@@ -29,6 +32,7 @@ test_data = phising_text_dataset(data=test_df,
 train_dataloader = DataLoader(train_data, batch_size=6, shuffle=True, collate_fn=nlp_collate_fn)
 test_dataloader = DataLoader(test_data, batch_size=6, collate_fn=nlp_collate_fn)
 
+#Initializes the model, loss function, optimizer, and accuracy
 model = BERTClass()
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
@@ -36,6 +40,7 @@ accuracy_fn = Accuracy("multiclass", num_classes=2)
 
 epochs = 10
 
+#Trains the model for a number of epochs
 for epoch in tqdm(range(epochs)):
     
     loss, acc = bert_train_step(model=model, 
